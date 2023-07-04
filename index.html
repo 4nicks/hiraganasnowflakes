@@ -132,7 +132,9 @@ function verificarEntrada() {
   
   function verificarHiragana() {
   var matchFound = false;
+  inputHiragana.value = inputHiragana.value.toLowerCase();
   for (var i = 0; i < hiraganasAtuais.length; i++) {
+    if (hiraganasAtuais[i].dataset.romanji.toLowerCase() === inputHiragana.value) {
     if (hiraganasAtuais[i].dataset.romanji === inputHiragana.value) {
       var somAcerto = document.getElementById('somAcerto');
       somAcerto.play();
