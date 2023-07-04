@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Jogo Hiragana</title>
+    <link rel="stylesheet" type="text/css" href="../HTMLCSS/style.css">
+	  <style>
+		  #placar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  color: white;
+  z-index: 1;
+}
+	  body {
+  background-color: #000;
+  color: #fff;
+  text-align: center;
+}
+
+#jogo {
+  position: relative;
+  height: 600px;
+  background-color: #333;
+  z-index: 0;
+}
+
+.hiragana {
+  backface-visibility: hidden;
+  will-change: transform;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50px;       /* Define a largura do círculo */
+  height: 50px;      /* Define a altura do círculo */
+  line-height: 50px; /* Centraliza o texto verticalmente */
+  border-radius: 50%; /* Faz o div ficar em formato de círculo */
+  background: white; /* Define a cor de fundo para branco */
+  color: black;      /* Define a cor do texto para preto */
+  text-align: center; /* Centraliza o texto horizontalmente */
+  font-weight: bold; /* Adiciona a propriedade font-weight */
+}
+
+#inputHiragana {
+  margin-top: 20px;
+}
+@keyframes fadeOut {
+  0% {opacity: 1;}
+  100% {opacity: 0;}
+}
+
+.hiragana-acerto {
+  animation-name: fadeOut;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+}
+
+	  </style>
+  </head>
+  <body>
+	<div id="placar">Pontos: 10</div>
+    <div id="jogo"></div>
+    <input type="text" id="inputHiragana" placeholder="Digite a romanização aqui">
+	<audio id="somAcerto" src="acerto.mp3" preload="auto"></audio>
+	<audio id="somErro" src="erro.mp3" preload="auto"></audio>
+    <button id="confirmar">Confirmar</button>
+	<button id="aumentar">Aumentar velocidade</button>
+    <button id="diminuir">Diminuir velocidade</button>
+    <script>
+	  
+// Inicializar variáveis
+var hiraganas = {"あ": "a", "い": "i", "う": "u", "え": "e", "お": "o", "か": "ka", "き": "ki", "く": "ku", "け": "ke", "こ": "ko", "さ": "sa", "し": "shi", "す": "su", "せ": "se", "そ": "so", "た": "ta", "ち": "chi", "つ": "tsu", "て": "te", "と": "to", "な": "na", "に": "ni", "ぬ": "nu", "ね": "ne", "の": "no", "は": "ha", "ひ": "hi", "ふ": "fu", "へ": "he", "ほ": "ho", "ま": "ma", "み": "mi", "む": "mu", "め": "me", "も": "mo", "ら": "ra", "り": "ri", "る": "ru", "れ": "re", "ろ": "ro", "や": "ya", "ゆ": "yu", "よ": "yo", "わ": "wa", "を": "wo", "ん": "n"};
+var hiraganasKeys = Object.keys(hiraganas);
+var jogoDiv = document.getElementById('jogo');
+var hiraganasAtuais = [];
+var velocidade = 0.5; //
+var pontos = 10;
+
+
+// Ajustar velocidade
+document.getElementById('aumentar').addEventListener('click', function() {
+  velocidade += 1; // Adicione isso
+});
+		
+document.getElementById('diminuir').addEventListener('click', function() {
+  if (velocidade > 1) {
+    velocidade -= 1; // Adicione isso
+  }
+});
+		
+// Criar um hiragana caindo
+function criarHiragana() {
+  var hiragana = document.createElement('div');
+  var randomIndex = Math.floor(Math.random() * hiraganasKeys.length);
+  var texto = document.createTextNode(hiraganasKeys[randomIndex]);
+  hiragana.className = 'hiragana';
+  hiragana.style.left = Math.random() * 100 + '%';
+  hiragana.appendChild(texto);
+  hiragana.dataset.romanji = hiraganas[hiraganasKeys[randomIndex]];
+  jogoDiv.appendChild(hiragana);
+  hiraganasAtuais.push(hiragana);
+}
+
+// Mover os hiraganas para baixo
+function moverHiraganas() {
+  for (var i = 0; i < hiraganasAtuais.length; i++) {
+    var top = hiraganasAtuais[i].offsetTop;
+    hiraganasAtuais[i].style.top = (top + velocidade) + 'px';
+    if (top > jogoDiv.clientHeight) {
+      hiraganasAtuais[i].parentNode.removeChild(hiraganasAtuais[i]);
+      hiraganasAtuais.splice(i, 1);
+      // O jogador perdeu
+      pontos -= 1;
+	  atualizarPlacar();
+	  var somErro = document.getElementById('somErro');
+  somErro.play();
+      break;
+    }
+    }
+}
+
+function verificarEntrada() {
+  var inputHiragana = document.getElementById('inputHiragana');
+  var botaoConfirmar = document.getElementById('confirmar');
+  
+  botaoConfirmar.addEventListener('click', verificarHiragana);
+  inputHiragana.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      verificarHiragana();
+    }
+  });
+  
+  function verificarHiragana() {
+  var matchFound = false;
+  for (var i = 0; i < hiraganasAtuais.length; i++) {
+    if (hiraganasAtuais[i].dataset.romanji === inputHiragana.value) {
+      var somAcerto = document.getElementById('somAcerto');
+      somAcerto.play();
+      hiraganasAtuais[i].classList.add('hiragana-acerto');
+	  pontos += 1;
+	  atualizarPlacar();
+      setTimeout(function() {
+        hiraganasAtuais[i].parentNode.removeChild(hiraganasAtuais[i]);
+        hiraganasAtuais.splice(i, 1);
+      }, 500);
+      inputHiragana.value = '';
+	  matchFound = true;
+      break;
+    }
+  }
+	  
+	   if (!matchFound) {
+      pontos -= 1;
+      atualizarPlacar();
+	   var somErro = document.getElementById('somErro');
+  somErro.play();
+    }
+
+    inputHiragana.value = '';
+  }
+}
+
+// Atualizar o placar
+  function atualizarPlacar() {
+  var placarDiv = document.getElementById('placar');
+  placarDiv.textContent = "Pontos: " + pontos;
+}
+		
+// Iniciar o jogo
+function iniciarJogo() {
+  setInterval(criarHiragana, 2000);
+  setInterval(moverHiraganas, 20);
+  verificarEntrada();
+}
+
+// Começar o jogo quando a página carregar
+window.onload = iniciarJogo;
+</script>  
+  </body>
+</html>
